@@ -34,7 +34,7 @@ public class TrackingController {
 
     @GetMapping("/history/{article}")
     public ResponseEntity<List<ProductSnapshot>> getHistory(@PathVariable String article) {
-        List<ProductSnapshot> history = repository.findByProductIdOrderByCreatedAtDesc(article);
+        List<ProductSnapshot> history = wbService.getSnapshotHistory(article);
         return ResponseEntity.ok(history);
     }
 }

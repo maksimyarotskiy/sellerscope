@@ -9,6 +9,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -75,5 +76,9 @@ public class WbProductParserService {
                                     !Objects.equals(last.getDescriptionHash(), currentSnapshot.getDescriptionHash());
                     return changed;
                 }).orElse(true);
+    }
+
+    public List<ProductSnapshot> getSnapshotHistory(String article) {
+        return repository.findByProductIdOrderByCreatedAtDesc(article);
     }
 }

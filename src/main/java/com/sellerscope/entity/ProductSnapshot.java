@@ -31,6 +31,7 @@ public class ProductSnapshot {
     private LocalDateTime createdAt;
     private boolean changed;
 
+    @Builder.Default
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "snapshot_changes", joinColumns = @JoinColumn(name = "snapshot_id"))
     @Column(name = "field")

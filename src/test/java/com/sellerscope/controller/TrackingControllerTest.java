@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -86,5 +87,42 @@ class TrackingControllerTest {
 
         mockMvc.perform(post("/track/bad"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturnChangedFields() throws Exception {
+        ProductSnapshot changedSnapshot = ProductSnapshot.builder()
+                .productId("123")
+                .name("Changed Product")
+                .price(BigDecimal.valueOf(120))
+                .reviewCount(15)
+                .rating(4.8)
+                .photoHash("hash1")
+                .descriptionHash("hash2")
+                .createdAt(LocalDateTime.now())
+                .changed(true)
+                .changedFields(Set.of("price", "rating"))
+                .build();
+
+
+        ProductSnapshot unchangedSnapshot = ProductSnapshot.builder()
+                .productId("123")
+                .name("Unchanged Product")
+                .price(BigDecimal.valueOf(100))
+                .reviewCount(15)
+                .rating(4.8)
+                .photoHash("hash1")
+                .descriptionHash("hash2")
+                .createdAt(LocalDateTime.now().minusDays(1))
+                .changed(false)
+                .build();
+
+        when(repository.findByProductIdOrderByCreatedAtDesc("123"))
+                .thenReturn(List.of(changedSnapshot, unchangedSnapshot));
+
+        mockMvc.perform(get("/track/changed-fields/123"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].changedFields").isArray())
+                .andExpect(jsonPath("$[0].changedFields").value(org.hamcrest.Matchers.containsInAnyOrder("price", "rating")));
     }
 }

@@ -5,12 +5,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sellerscope.entity.ProductSnapshot;
 import com.sellerscope.repository.ProductSnapshotRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
 public class WbProductParserService {
@@ -39,18 +44,32 @@ public class WbProductParserService {
             int reviewCount = product.get("feedbacks").asInt();
             double rating = product.get("rating").asDouble();
 
+            JsonNode photosNode = product.get("photos");
+            String photosCombined = "";
+
+            if (photosNode != null && photosNode.isArray()) {
+                photosCombined = StreamSupport.stream(photosNode.spliterator(), false)
+                        .map(JsonNode::asText)
+                        .collect(Collectors.joining(","));
+            }
+
+            String photoHash = DigestUtils.md5DigestAsHex(photosCombined.getBytes(StandardCharsets.UTF_8));
+
+            String description = product.has("description") ? product.get("description").asText() : "";
+            String descriptionHash = DigestUtils.md5DigestAsHex(description.getBytes(StandardCharsets.UTF_8));
+
             BigDecimal price = new BigDecimal(product.get("priceU").asText()).divide(BigDecimal.valueOf(100)); // priceU — в копейках
 
-            // TODO: потом добавлю расчёт hash'ей по фото и описанию
             ProductSnapshot snapshot = ProductSnapshot.builder()
                     .productId(article)
                     .name(name)
                     .price(price)
                     .reviewCount(reviewCount)
                     .rating(rating)
-                    .photoHash("stub-photo")
-                    .descriptionHash("stub-description")
+                    .photoHash(photoHash)
+                    .descriptionHash(descriptionHash)
                     .createdAt(LocalDateTime.now())
+                    .changedFields(new HashSet<>())
                     .build();
 
             boolean changed = compareWithLastSnapshot(snapshot);
@@ -68,14 +87,37 @@ public class WbProductParserService {
                 .stream()
                 .findFirst()
                 .map(last -> {
-                    boolean changed =
-                            last.getPrice().compareTo(currentSnapshot.getPrice()) != 0 ||
-                                    last.getReviewCount() != currentSnapshot.getReviewCount() ||
-                                    Double.compare(last.getRating(), currentSnapshot.getRating()) != 0 ||
-                                    !Objects.equals(last.getPhotoHash(), currentSnapshot.getPhotoHash()) ||
-                                    !Objects.equals(last.getDescriptionHash(), currentSnapshot.getDescriptionHash());
+                    boolean changed = false;
+
+                    if (last.getPrice().compareTo(currentSnapshot.getPrice()) != 0) {
+                        currentSnapshot.getChangedFields().add("price");
+                        changed = true;
+                    }
+                    if (last.getReviewCount() != currentSnapshot.getReviewCount()) {
+                        currentSnapshot.getChangedFields().add("reviewCount");
+                        changed = true;
+                    }
+                    if (Double.compare(last.getRating(), currentSnapshot.getRating()) != 0) {
+                        currentSnapshot.getChangedFields().add("rating");
+                        changed = true;
+                    }
+                    if (!Objects.equals(last.getPhotoHash(), currentSnapshot.getPhotoHash())) {
+                        currentSnapshot.getChangedFields().add("photos");
+                        changed = true;
+                    }
+                    if (!Objects.equals(last.getDescriptionHash(), currentSnapshot.getDescriptionHash())) {
+                        currentSnapshot.getChangedFields().add("description");
+                        changed = true;
+                    }
+
+                    currentSnapshot.setChanged(changed);
                     return changed;
-                }).orElse(true);
+                })
+                .orElseGet(() -> {
+                    currentSnapshot.getChangedFields().add("new");
+                    currentSnapshot.setChanged(true);
+                    return true;
+                });
     }
 
     public List<ProductSnapshot> getSnapshotHistory(String article) {

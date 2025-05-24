@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Data
@@ -28,4 +30,9 @@ public class ProductSnapshot {
 
     private LocalDateTime createdAt;
     private boolean changed;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "snapshot_changes", joinColumns = @JoinColumn(name = "snapshot_id"))
+    @Column(name = "field")
+    private Set<String> changedFields = new HashSet<>();
 }

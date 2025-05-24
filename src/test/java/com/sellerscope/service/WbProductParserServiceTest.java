@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +34,7 @@ class WbProductParserServiceTest {
                 .rating(4.5)
                 .photoHash("abc")
                 .descriptionHash("xyz")
+                .changedFields(new HashSet<>())
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -44,6 +46,7 @@ class WbProductParserServiceTest {
                 .rating(4.5)
                 .photoHash("abc")
                 .descriptionHash("xyz")
+                .changedFields(new HashSet<>())
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -53,6 +56,7 @@ class WbProductParserServiceTest {
         boolean changed = service.compareWithLastSnapshot(current);
 
         assertThat(changed).isTrue();
+        assertThat(current.getChangedFields()).containsExactly("price");
     }
 
     @Test
@@ -65,6 +69,7 @@ class WbProductParserServiceTest {
                 .rating(5.0)
                 .photoHash("x")
                 .descriptionHash("y")
+                .changedFields(new HashSet<>())
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -73,6 +78,7 @@ class WbProductParserServiceTest {
 
         boolean changed = service.compareWithLastSnapshot(snap);
         assertThat(changed).isFalse();
+        assertThat(snap.getChangedFields()).isEmpty();
     }
 
     @Test
@@ -85,6 +91,7 @@ class WbProductParserServiceTest {
                 .rating(0.0)
                 .photoHash("a")
                 .descriptionHash("b")
+                .changedFields(new HashSet<>())
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -93,5 +100,6 @@ class WbProductParserServiceTest {
 
         boolean changed = service.compareWithLastSnapshot(current);
         assertThat(changed).isTrue();
+        assertThat(current.getChangedFields()).isNotEmpty();
     }
 }

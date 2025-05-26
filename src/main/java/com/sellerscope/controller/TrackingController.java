@@ -41,7 +41,7 @@ public class TrackingController {
         return ResponseEntity.ok(history);
     }
 
-    // GET /track/changes/{article} — получишь снапшоты, где были изменения
+    // GET /track/changes/{article} — получишь снепшоты, где были изменения продукта
     @GetMapping("/changes/{article}")
     public ResponseEntity<List<ProductSnapshot>> getChanges(@PathVariable String article) {
         List<ProductSnapshot> changes = repository.findByProductIdOrderByCreatedAtDesc(article).stream()

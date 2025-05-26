@@ -1,6 +1,7 @@
 package com.sellerscope.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
 import com.sellerscope.entity.ProductSnapshot;
 import com.sellerscope.repository.ProductSnapshotRepository;
 import com.sellerscope.service.WbProductParserService;
@@ -124,5 +125,44 @@ class TrackingControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].changedFields").isArray())
                 .andExpect(jsonPath("$[0].changedFields").value(org.hamcrest.Matchers.containsInAnyOrder("price", "rating")));
+    }
+
+    @Test
+    void shouldReturnChangedSnapshot() throws Exception {
+        ProductSnapshot changedSnapshot = ProductSnapshot.builder()
+                .productId("123")
+                .name("Changed Product")
+                .price(BigDecimal.valueOf(500))
+                .reviewCount(36)
+                .rating(4.7)
+                .photoHash("hash1")
+                .descriptionHash("hash2")
+                .createdAt(LocalDateTime.now())
+                .changed(true)
+                .changedFields(Set.of("reviewCount", "rating"))
+                .build();
+
+        ProductSnapshot unchangedSnapshot = ProductSnapshot.builder()
+                .productId("123")
+                .name("Unchanged Product")
+                .price(BigDecimal.valueOf(500))
+                .reviewCount(15)
+                .rating(4.8)
+                .photoHash("hash1")
+                .descriptionHash("hash2")
+                .createdAt(LocalDateTime.now().minusDays(1))
+                .changed(false)
+                .build();
+
+        when(repository.findByProductIdOrderByCreatedAtDesc("123"))
+                .thenReturn(List.of(changedSnapshot, unchangedSnapshot));
+
+        mockMvc.perform(get("/track/changes/123"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].productId").value("123"))
+                .andExpect(jsonPath("$[0].name").value("Changed Product"))
+                .andExpect(jsonPath("$[0].price").value("500"))
+                .andExpect(jsonPath("$[0].changedFields").isArray())
+                .andExpect(jsonPath("$[0].changedFields").value(org.hamcrest.Matchers.containsInAnyOrder("reviewCount", "rating")));
     }
 }

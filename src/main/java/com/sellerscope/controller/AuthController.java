@@ -1,6 +1,7 @@
 package com.sellerscope.controller;
 
 import com.sellerscope.dto.AuthResponse;
+import com.sellerscope.dto.LoginRequest;
 import com.sellerscope.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,12 +25,12 @@ public class AuthController {
     private JwtUtil jwtUtil;
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
+    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
+        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
         String token = jwtUtil.generateToken(userDetails);
 
         return ResponseEntity.ok(new AuthResponse(token));

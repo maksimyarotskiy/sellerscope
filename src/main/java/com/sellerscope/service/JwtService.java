@@ -3,14 +3,14 @@ package com.sellerscope.service;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
-import org.apache.catalina.UserDatabase;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.time.Instant;
 import java.util.Date;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Service
@@ -18,8 +18,11 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String secretKey;
 
-    @Value("${jwt.expiration}")
-    private Long expiration;
+    @Value("${jwt.access.expiration}")
+    private Long accessTokenExpiration;
+
+    @Value("${jwt.refresh.expiration}")
+    private Long refreshTokenExpiration;
 
     private Key key;
 
@@ -32,16 +35,24 @@ public class JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public String generateToken(UserDetails userDetails) {
+    public String generateAccessToken(UserDetails userDetails) {
         return Jwts.builder()
-                .setSubject(userDetails.getUsername()) // переопределен на email
+                .setSubject(userDetails.getUsername()) // email
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public boolean isTokenValid(String token, UserDetails userDetails) {
+    public String generateRefreshToken() {
+        return UUID.randomUUID().toString(); // Случайная строка для refresh token
+    }
+
+    public Instant getRefreshTokenExpiry() {
+        return Instant.now().plusMillis(refreshTokenExpiration);
+    }
+
+    public boolean isAccessTokenValid(String token, UserDetails userDetails) {
         final String email = extractEmail(token);
         return email.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
@@ -49,7 +60,6 @@ public class JwtService {
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
-
 
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);

@@ -15,6 +15,6 @@ spring:
 jwt:
   secret: ${JWT_SECRET}
   access:
-    expiration: ${JWT_ACCESS_EXPIRATION:900000} # 15 минут
+    expiration: ${JWT_ACCESS_EXPIRATION:900000}
   refresh:
-    expiration: ${JWT_REFRESH_EXPIRATION:2592000000} # 30 дней
+    expiration: ${JWT_REFRESH_EXPIRATION:2592000000}

@@ -9,6 +9,7 @@ import com.sellerscope.entity.Role;
 import com.sellerscope.entity.User;
 import com.sellerscope.repository.RefreshTokenRepository;
 import com.sellerscope.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -122,5 +124,12 @@ public class AuthenticationService {
         refreshTokenRepository.save(refreshToken);
         logger.info("Refresh token saved for user: {}", user.getEmail());
         return token;
+    }
+
+    @Transactional
+    public void logout(UserDetails userDetails) {
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        refreshTokenRepository.deleteByUser(user);
     }
 }

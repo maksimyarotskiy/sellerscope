@@ -1,9 +1,6 @@
 package com.sellerscope.controller;
 
-import com.sellerscope.dto.RegisterRequest;
-import com.sellerscope.entity.User;
 import com.sellerscope.service.UserService;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,9 +13,9 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody RegisterRequest request) {
-        User user = userService.register(request);
-        return ResponseEntity.ok(user);
-    }
+//    @PostMapping("/register")
+//    public ResponseEntity<User> register(@RequestBody RegisterRequest request) {
+//        User user = userService.register(request);
+//        return ResponseEntity.ok(user);
+//    }
 }

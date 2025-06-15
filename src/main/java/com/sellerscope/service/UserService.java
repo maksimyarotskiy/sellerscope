@@ -1,7 +1,5 @@
 package com.sellerscope.service;
 
-import com.sellerscope.dto.RegisterRequest;
-import com.sellerscope.entity.User;
 import com.sellerscope.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,17 +16,17 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public User register(RegisterRequest request) {
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Пользователь с таким email уже существует");
-        }
-
-        User user = User.builder()
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .build();
-
-        return userRepository.save(user);
-    }
+//    public User register(RegisterRequest request) {
+//        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+//            throw new RuntimeException("Пользователь с таким email уже существует");
+//        }
+//
+//        User user = User.builder()
+//                .email(request.getEmail())
+//                .password(passwordEncoder.encode(request.getPassword()))
+//                .build();
+//
+//        return userRepository.save(user);
+//    }
 
 }

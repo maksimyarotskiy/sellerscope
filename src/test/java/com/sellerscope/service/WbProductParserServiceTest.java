@@ -4,6 +4,7 @@ import com.sellerscope.entity.ProductSnapshot;
 import com.sellerscope.repository.ProductSnapshotRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.redisson.api.RedissonClient;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -16,12 +17,14 @@ import static org.mockito.Mockito.*;
 class WbProductParserServiceTest {
 
     private ProductSnapshotRepository repository;
+    private RedissonClient redissonClient;
     private WbProductParserService service;
 
     @BeforeEach
     void setUp() {
         repository = mock(ProductSnapshotRepository.class);
-        service = new WbProductParserService(repository);
+        redissonClient = mock(RedissonClient.class);
+        service = new WbProductParserService(repository, redissonClient);
     }
 
     @Test

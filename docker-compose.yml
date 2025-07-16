@@ -27,9 +27,12 @@ services:
       db:
         condition: service_healthy
     ports:
+      - "443:443"
       - "8080:8080"
     env_file:
       - .env
+    volumes:
+      - /etc/letsencrypt/live/api.seller-scope.ru/keystore.p12:/etc/letsencrypt/live/api.seller-scope.ru/keystore.p12:ro
 
   redis:
     image: redis:7

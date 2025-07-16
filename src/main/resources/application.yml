@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: SellerScope
   datasource:
     hikari:
       max-lifetime: 60000
